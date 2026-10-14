@@ -1,0 +1,84 @@
+# Shared configuration. Profile-specific overrides live in application-dev.yml
+# and application-prod.yml.
+
+spring:
+  application:
+    name: banking-account-management-api
+
+  profiles:
+    default: dev
+
+  jpa:
+    hibernate:
+      # NONE, and load-bearing. schema.sql owns the schema; Hibernate only
+      # validates against it. Set this to update/create and there are two owners
+      # of the DDL, producing a schema that differs between a fresh database and
+      # an existing one.
+      ddl-auto: none
+    open-in-view: false
+    properties:
+      hibernate:
+        jdbc.batch_size: 30
+        order_inserts: true
+        # The JVM and driver work in UTC. The bank's own zone is applied
+        # deliberately when computing value dates, never picked up implicitly
+        # from wherever the server happens to run.
+        jdbc.time_zone: UTC
+        jakarta.persistence.lock.timeout: 3000
+        query.fail_on_pagination_over_collection_fetch: true
+
+  sql:
+    init:
+      # ALWAYS, paired with ddl-auto: none. Both scripts are idempotent.
+      mode: always
+      schema-locations: classpath:schema.sql
+      data-locations: classpath:data.sql
+      continue-on-error: false
+
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+      # Money is BigDecimal everywhere. Serialising it as a JSON number lets a
+      # JavaScript client parse it into a double and lose precision on large
+      # balances; as a string, the client decides.
+      write-bigdecimal-as-plain: true
+    default-property-inclusion: non_null
+
+server:
+  shutdown: graceful
+  error:
+    include-message: never
+    include-stacktrace: never
+
+banking:
+  policy:
+    # The bank's own timezone. A transaction happens at an instant; statements
+    # and daily limits are reckoned against a banking date. Converting in the
+    # server's zone moves the boundary by up to a day.
+    zone: ${BANK_ZONE:Asia/Kolkata}
+    # Anti-fraud window after a payee is verified.
+    beneficiary-cooling-period: ${COOLING_PERIOD:4h}
+    cooling-period-transfer-limit: ${COOLING_LIMIT:5000.00}
+    default-daily-transfer-limit: ${DAILY_LIMIT:200000.00}
+    max-single-transfer-amount: ${MAX_TRANSFER:1000000.00}
+    max-cash-deposit-amount: ${MAX_CASH_DEPOSIT:200000.00}
+    max-cash-withdrawal-amount: ${MAX_CASH_WITHDRAWAL:50000.00}
+    max-beneficiaries-per-customer: 25
+    max-accounts-per-customer: 10
+    minimum-account-holder-age: 18
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+    tags-sorter: alpha
