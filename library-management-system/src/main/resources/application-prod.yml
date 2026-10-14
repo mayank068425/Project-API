@@ -1,0 +1,53 @@
+# Production.
+#
+# Every secret is an environment variable with no default. A missing one fails
+# at start-up, which is the correct time to find out.
+
+spring:
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    hikari:
+      maximum-pool-size: ${DB_POOL_SIZE:20}
+      minimum-idle: 5
+      connection-timeout: 20000
+      leak-detection-threshold: 30000
+
+  jpa:
+    show-sql: false
+
+  sql:
+    init:
+      # Still `always` because both scripts are idempotent, but a real
+      # deployment should set this to `never` and apply schema changes through a
+      # reviewed migration tool. Running DDL at application start-up means every
+      # instance in a rolling deploy races to alter the same tables.
+      mode: ${SQL_INIT_MODE:never}
+
+lms:
+  jwt:
+    # No default. The application will not start without it.
+    secret: ${JWT_SECRET}
+    access-token-validity-seconds: ${JWT_ACCESS_VALIDITY:900}
+    refresh-token-validity-seconds: ${JWT_REFRESH_VALIDITY:604800}
+
+logging:
+  level:
+    root: WARN
+    com.example.lms: INFO
+    org.hibernate.SQL: WARN
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+
+springdoc:
+  # Off in production: the document enumerates every endpoint and its shape,
+  # which is a map for anyone probing the API.
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false

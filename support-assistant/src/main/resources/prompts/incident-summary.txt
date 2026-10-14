@@ -1,0 +1,7 @@
+Summarise the incident description below in at most six sentences.
+
+Keep every specific figure, error code, identifier and timestamp that appears.
+Those are the parts an engineer searches for, and a summary that drops them is
+worse than the original.
+
+Do not speculate about cause. Do not add anything not present in the text.

@@ -1,0 +1,39 @@
+# Local development.
+#
+# The postgres image MUST be pgvector/pgvector. CREATE EXTENSION vector will not
+# find the extension on a stock postgres image.
+
+spring:
+  datasource:
+    url: jdbc:postgresql://${PG_HOST:localhost}:${PG_PORT:5432}/${PG_DB:supportai}
+    username: ${PG_USER:supportai}
+    password: ${PG_PASSWORD:supportai}
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+
+  jpa:
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+supportai:
+  jwt:
+    # Development only. The application refuses to start if this is under 32
+    # characters: a forged token here carries a clearance claim.
+    secret: ${JWT_SECRET:local-development-secret-key-at-least-32-characters}
+    access-token-validity-seconds: 3600
+    refresh-token-validity-seconds: 604800
+
+logging:
+  level:
+    com.supportai: DEBUG
+    org.hibernate.SQL: DEBUG
+    # Deliberately off. Binding parameters logs password hashes and, worse here,
+    # whole incident descriptions containing customer data.
+    # org.hibernate.orm.jdbc.bind: TRACE
+
+springdoc:
+  swagger-ui:
+    enabled: true

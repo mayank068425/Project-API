@@ -1,0 +1,87 @@
+# Shared configuration. Profile-specific overrides live in application-dev.yml
+# and application-prod.yml.
+
+spring:
+  application:
+    name: library-management-system
+
+  profiles:
+    default: dev
+
+  jpa:
+    hibernate:
+      # NONE, and this is load-bearing. schema.sql owns the schema; Hibernate
+      # only validates against it. Set this to update/create and there are two
+      # owners of the DDL, which produces a schema that differs between a fresh
+      # database and an existing one.
+      ddl-auto: none
+    open-in-view: false
+    properties:
+      hibernate:
+        jdbc.batch_size: 50
+        order_inserts: true
+        jdbc.time_zone: UTC
+        jakarta.persistence.lock.timeout: 3000
+        # Errors rather than silently paginating a fetched collection in memory,
+        # which is fine on ten rows and fatal on a million.
+        query.fail_on_pagination_over_collection_fetch: true
+
+  sql:
+    init:
+      # ALWAYS, paired with ddl-auto: none above. Both scripts are written to be
+      # idempotent, so a restart against a populated database is a no-op.
+      mode: always
+      schema-locations: classpath:schema.sql
+      data-locations: classpath:data.sql
+      continue-on-error: false
+
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+    default-property-inclusion: non_null
+
+server:
+  shutdown: graceful
+  error:
+    # The exception handler decides what is safe to say. Never a stack trace.
+    include-message: never
+    include-stacktrace: never
+
+lms:
+  policy:
+    # The library's own timezone. A due date is a calendar date and a return is
+    # an instant; converting between them in the wrong zone moves the late/on
+    # -time boundary by up to a day.
+    zone: ${LIBRARY_ZONE:Asia/Kolkata}
+    loan-days: ${LOAN_DAYS:14}
+    max-books-per-member: ${MAX_BOOKS:5}
+    fine-per-day: ${FINE_PER_DAY:2.00}
+    grace-days: ${GRACE_DAYS:0}
+    # Fines stop growing at the replacement cost; past that it is a lost-item
+    # charge, not a late fee.
+    fine-cap-multiplier: ${FINE_CAP_MULTIPLIER:1.00}
+    default-replacement-cost: ${DEFAULT_REPLACEMENT_COST:500.00}
+    max-renewals: 2
+    reservation-hold-days: 2
+    reservation-expiry-days: 30
+
+  schedule:
+    overdue-sweep: "0 15 0 * * *"
+    hold-sweep: "0 0/30 * * * *"
+    token-sweep: "0 0 * * * *"
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+    tags-sorter: alpha

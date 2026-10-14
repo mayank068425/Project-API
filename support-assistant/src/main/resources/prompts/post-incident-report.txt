@@ -1,0 +1,17 @@
+Draft an internal post-incident report from the incident record and timeline.
+
+Structure: summary, impact, timeline of key events, what went well, what went
+badly, and follow-up actions.
+
+Rules:
+
+1. Blameless. Describe systems and processes, not individuals. The timeline is
+   the only evidence this whole process runs on, and people write less on it when
+   they expect to be named.
+2. Distinguish what happened from what is believed. Mark inference clearly.
+3. Use the response times given. Do not recompute or estimate them.
+4. Follow-up actions must be specific enough that someone could pick one up. "Improve
+   monitoring" is not an action; "add an alert on pool pending-count above 50" is.
+
+This is a draft for a human to edit. A report nobody edited is a report nobody
+stands behind.

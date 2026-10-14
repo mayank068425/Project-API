@@ -1,0 +1,37 @@
+# Local development.
+
+spring:
+  datasource:
+    url: jdbc:mysql://${MYSQL_HOST:localhost}:${MYSQL_PORT:3306}/${MYSQL_DB:library}?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&createDatabaseIfNotExist=true
+    username: root
+    password: 068425
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+
+  jpa:
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+lms:
+  jwt:
+    # Development only. The application refuses to start if this is under 32
+    # characters, so an accidentally short secret fails immediately rather than
+    # producing forgeable tokens.
+    secret: ${JWT_SECRET:local-development-secret-key-at-least-32-characters}
+    access-token-validity-seconds: 3600
+    refresh-token-validity-seconds: 604800
+
+logging:
+  level:
+    com.example.lms: DEBUG
+    org.hibernate.SQL: DEBUG
+    # Uncomment to see bound parameters. Off by default because it logs
+    # password hashes and reset tokens in full.
+    # org.hibernate.orm.jdbc.bind: TRACE
+
+springdoc:
+  swagger-ui:
+    enabled: true

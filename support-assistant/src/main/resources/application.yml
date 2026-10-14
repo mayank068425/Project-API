@@ -1,0 +1,95 @@
+# Shared configuration. Profile overrides in application-dev.yml / -prod.yml.
+
+spring:
+  application:
+    name: support-assistant
+
+  profiles:
+    default: dev
+
+  jpa:
+    hibernate:
+      # NONE. schema.sql owns the schema, including the pgvector column type and
+      # the generated tsvector column, neither of which Hibernate would produce.
+      ddl-auto: none
+    open-in-view: false
+    properties:
+      hibernate:
+        jdbc.batch_size: 50
+        order_inserts: true
+        query.fail_on_pagination_over_collection_fetch: true
+
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:schema.sql
+      data-locations: classpath:data.sql
+      continue-on-error: false
+
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+    default-property-inclusion: non_null
+
+  ai:
+    openai:
+      api-key: ${AI_API_KEY:not-set}
+      # Points at any OpenAI-compatible endpoint, including a local Ollama.
+      base-url: ${AI_BASE_URL:https://api.openai.com}
+      chat:
+        options:
+          model: ${AI_CHAT_MODEL:gpt-4o-mini}
+      embedding:
+        options:
+          model: ${AI_EMBEDDING_MODEL:text-embedding-3-small}
+    vectorstore:
+      pgvector:
+        # Must match the vector(768) column in schema.sql AND the model above.
+        # 768 for nomic-embed-text, 1536 for text-embedding-3-small. A mismatch
+        # fails at insert, which is the good outcome: silent degradation is not.
+        dimensions: ${AI_EMBEDDING_DIMENSIONS:768}
+        index-type: HNSW
+        distance-type: COSINE_DISTANCE
+        initialize-schema: false
+
+server:
+  shutdown: graceful
+  error:
+    # An unexpected exception's text can carry a customer identifier out of an
+    # incident description.
+    include-message: never
+    include-stacktrace: never
+
+supportai:
+  assistant:
+    # OFF by default, and that default is the point. Incidents, hybrid search,
+    # the dashboard and audit all work without it. A support tool that stops
+    # working when a model provider has an outage is a liability during exactly
+    # the incidents it exists for.
+    enabled: ${ASSISTANT_ENABLED:false}
+    analysis-temperature: 0.0
+    drafting-temperature: 0.4
+    retrieval-top-k: ${RETRIEVAL_TOP_K:8}
+    min-similarity: ${MIN_SIMILARITY:0.5}
+    timeout: 60s
+    max-incident-characters: 40000
+    # Below this many non-assistant timeline entries, an RCA is refused outright.
+    min-evidence-entries: ${MIN_EVIDENCE_ENTRIES:3}
+    similar-incident-limit: 5
+    precedent-half-life: 180d
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+    tags-sorter: alpha

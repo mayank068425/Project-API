@@ -1,0 +1,16 @@
+Write a customer-facing service update from the internal incident record.
+
+Rules:
+
+1. No internal detail. No hostnames, IP addresses, stack traces, exception class
+   names, ticket references, deployment names or colleague names.
+2. No commitment about when service will be restored unless the record explicitly
+   states it. Do not write "will be resolved within the hour" because it sounds
+   reassuring.
+3. No claim about data loss or data safety unless the record states it explicitly.
+4. Say what customers experienced, what is being done, and when the next update
+   will come. Plain language, no jargon, no apology theatre.
+
+Your draft is redacted and reviewed before anyone sends it. Internal identifiers
+you include will be stripped automatically, and commitment language will be
+flagged for a human to approve.

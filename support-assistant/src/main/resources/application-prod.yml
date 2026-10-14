@@ -1,0 +1,46 @@
+# Production. Every secret is an environment variable with no default.
+
+spring:
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    hikari:
+      maximum-pool-size: ${DB_POOL_SIZE:20}
+      minimum-idle: 5
+      connection-timeout: 20000
+      leak-detection-threshold: 30000
+
+  jpa:
+    show-sql: false
+
+  sql:
+    init:
+      # Off. Running DDL at start-up means every instance in a rolling deploy
+      # races to alter the same tables, and CREATE EXTENSION needs privileges the
+      # application role should not hold in production.
+      mode: ${SQL_INIT_MODE:never}
+
+supportai:
+  jwt:
+    secret: ${JWT_SECRET}
+    access-token-validity-seconds: ${JWT_ACCESS_VALIDITY:1800}
+    refresh-token-validity-seconds: ${JWT_REFRESH_VALIDITY:604800}
+
+logging:
+  level:
+    root: WARN
+    com.supportai: INFO
+    org.hibernate.SQL: WARN
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
